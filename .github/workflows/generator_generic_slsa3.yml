@@ -36,6 +36,7 @@ jobs:
       base64-subjects: false
       upload-assets: false
       private-repository: true
+      artifact-input: build-output
     permissions:
           id-token: write
           contents: write
