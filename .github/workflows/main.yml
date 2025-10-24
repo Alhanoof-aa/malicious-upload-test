@@ -31,7 +31,7 @@ jobs:
           path: build-output.text
           
       - name: Generate provenance
-        uses: slsa-framework/slsa-github-generator@v1.7.0
+        uses: slsa-framework/slsa-github-generator/.github/workflows/slsa3-provenance-generic.yaml@v1.7.0
         with: 
            artifact_path: build-output.txt
            base64-subjects: false
