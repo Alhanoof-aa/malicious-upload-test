@@ -11,18 +11,21 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes}}
     
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
         
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-        
       - name: Create artifact
-        run: echo "Secure artifact built at $(date)" > build-output.txt
+        run: echo "This is my secure file" > build-output.txt
+
+      - name: Compute base64 SHA256 hash
+        id: hash
+        run: |
+          hash=$(sha256sum build-output.txt | cut -d ' ' -f1)
+          echo "hashes=$(echo -n \"sha256:$hash\" | base64 -w0)" >>"$GITHUB_OUTPUT"
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -33,7 +36,7 @@ jobs:
     needs: build
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
     with:
-      base64-subjects: "${{ needs.build.outputs.hashes}}"
+      base64-subjects: ${{ needs.build.outputs.hashes}}
       upload-assets: false
       private-repository: true
     permissions:
