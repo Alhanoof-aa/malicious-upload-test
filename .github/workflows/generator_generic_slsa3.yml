@@ -34,7 +34,7 @@ jobs:
           path: build-output.txt
   generate-provenance:
     needs: build
-    uses: slsa-framework/slsa-github-generator/.github/workflows/slsa3-provenance-generic.yaml@v1.4.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
     with:
       artifact_path: build-output.txt
       base64-subjects: false
