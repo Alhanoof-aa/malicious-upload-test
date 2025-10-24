@@ -1,8 +1,12 @@
-name: Simple Python CI
+name: SLSA Provenance Test
 on:
   push:
     branches:
       - main
+permissions:
+  id-token: write
+  contents: write
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,5 +20,17 @@ jobs:
         with:
           python-version: '3.x'
         
-      - name: Run script
-        run: python hello.py
+      - name: Create artifact
+        run: |
+          echo "Secure artifact built at $(date)" > build-output.text
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: build-output.text
+          
+      - name: Generate provenance
+        uses: slsa-framework/slsa-github-generator/actions/generator@v1.7.0
+        with: 
+           artifact_path: build-output.txt
