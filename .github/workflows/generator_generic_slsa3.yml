@@ -35,6 +35,7 @@ jobs:
     with:
       base64-subjects: false
       upload-assets: false
+      private-repository: true
     permissions:
           id-token: write
           contents: write
