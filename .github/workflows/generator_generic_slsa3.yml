@@ -6,12 +6,11 @@ on:
 permissions:
   id-token: write
   contents: write
+  actions: read
   
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-name: ${{ steps.upload.output.artifact-name}}
     
     steps:
       - name: Checkout code
@@ -23,22 +22,20 @@ jobs:
           python-version: '3.x'
         
       - name: Create artifact
-        run: |
-          echo "Secure artifact built at $(date)" > build-output.text
+        run: echo "Secure artifact built at $(date)" > build-output.txt
           
       - name: Upload artifact
-        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: build-output.txt
   generate-provenance:
     needs: build
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.10.0
     with:
-      artifact_path: build-output.txt
       base64-subjects: false
       upload-assets: false
     permissions:
           id-token: write
           contents: write
+          actions: read
