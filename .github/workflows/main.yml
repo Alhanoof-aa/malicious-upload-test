@@ -10,6 +10,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.upload.output.artifact-name}}
     
     steps:
       - name: Checkout code
@@ -25,14 +27,18 @@ jobs:
           echo "Secure artifact built at $(date)" > build-output.text
           
       - name: Upload artifact
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: build-output.text
-          
-      - name: Generate provenance
-        uses: slsa-framework/slsa-github-generator/.github/workflows/slsa3-provenance-generic.yaml@v1.7.0
-        with: 
-           artifact_path: build-output.txt
-           base64-subjects: false
-           upload-assets: false
+          path: build-output.txt
+  generate-provenance:
+    needs: build
+    uses: slsa-framework/slsa-github-generator/.github/workflows/slsa3-provenance-generic.yaml@v1.7.0
+    with:
+      artifact_path: build-output.txt
+      base64-subjects: false
+      upload-assets: false
+    permissions:
+          id-token: write
+          contents: write
