@@ -32,7 +32,6 @@ jobs:
           name: sbom
           path: sbom.json
 
-
   validate-sbom:
     needs: generate-sbom
     runs-on: ubuntu-latest
@@ -46,25 +45,25 @@ jobs:
         with:
           name: sbom
 
-      - name: Install jq (for reading JSON)
+      - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Validate SBOM against approved components
         run: |
-          echo " Starting SBOM Validation..."
-          echo " Approved components:"
+          echo " Validating SBOM..."
+          
+          jq -r '.packages[].name' sbom.json > extracted_components.txt
+          
+          echo " Approved components list:"
           cat approved_components.txt
 
-          echo " Extracting components from SBOM:"
-          jq -r '.packages[].name' sbom.json > extracted_components.txt
+          echo " Extracted from SBOM:"
           cat extracted_components.txt
-
-          echo " Comparing components..."
 
           # Check for any unapproved components
           PASS=true
           while read component; do
-            if ! grep -qx "$component found: $component"
+            if ! grep -qx "$component" approved_components.txt; then
               echo " Unapproved component found: $component"
               PASS=false
             fi
