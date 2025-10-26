@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      hashes: ${{ steps.hash.outputs.hashes}}
+      hashes: ${{ steps.hash.outputs.hashes }}
     
     steps:
       - name: Checkout code
@@ -27,6 +27,10 @@ jobs:
           HASH=$(sha256sum build-output.txt | cut -d ' ' -f1)
           HASH_ENCODED=$(echo -n "sha256:$HASH" | base64 -w0)
           echo "hashes=$HASH_ENCODED" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Debug print hash
+        run: echo "Encoded hash is:${{ steps.hash.outputs.hashes }}"
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
