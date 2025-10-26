@@ -4,8 +4,8 @@ on:
     branches:
       - main
 permissions:
-  id-token: write
   contents: write
+  id-token: write
   actions: read
   
 jobs:
@@ -19,20 +19,21 @@ jobs:
         uses: actions/checkout@v3
         
       - name: Create a build artifact
-        run: |
-          echo "This is my secure file" > build-output.txt
+        run: echo "This is my secure file" > build-output.txt
 
-      - name: Calculate base64-encoded SHA256 hash
+      - name: Calculate base64 SHA256 hash
         id: hash
         run: |
-          DIGEST=$(sha256sum build-output.txt | cut -d ' ' -f1)
-          echo "hashes=$(echo -n 'sha256:$DIGEST' | base64 -w0)" >> $GITHUB_OUTPUT
+          HASH=$(sha256sum build-output.txt | cut -d ' ' -f1)
+          HASH_ENCODED=$(echo -n "sha256:$HASH" | base64 -w0)
+          echo "hashes=$HASH_ENCODED" >> $GITHUB_OUTPUT
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: build-output.txt
+          
   generate-provenance:
     needs: build
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
@@ -41,6 +42,6 @@ jobs:
       upload-assets: false
       private-repository: true
     permissions:
-          id-token: write
           contents: write
+          id-token: write
           actions: read
