@@ -1,4 +1,4 @@
-name: SBOM Generator
+name: SBOM Generator and Validator
 
 on:
   push:
@@ -31,3 +31,48 @@ jobs:
         with:
           name: sbom
           path: sbom.json
+
+
+  validate-sbom:
+    needs: generate-sbom
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download SBOM
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom
+
+      - name: Install jq (for reading JSON)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Validate SBOM against approved components
+        run: |
+          echo " Starting SBOM Validation..."
+          echo " Approved components:"
+          cat approved_components.txt
+
+          echo " Extracting components from SBOM:"
+          jq -r '.packages[].name' sbom.json > extracted_components.txt
+          cat extracted_components.txt
+
+          echo " Comparing components..."
+
+          # Check for any unapproved components
+          PASS=true
+          while read component; do
+            if ! grep -qx "$component found: $component"
+              echo " Unapproved component found: $component"
+              PASS=false
+            fi
+          done < extracted_components.txt
+
+          if [ "$PASS" "false" ]; then
+            echo " SBOM validation faild."
+            exit 1 
+          else
+            echo " SBOM validation passed!"
+          fi
