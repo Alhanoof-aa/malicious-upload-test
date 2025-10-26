@@ -17,7 +17,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Recreate build artifact
-        run: echo "This is a secure build artifact" > build-output.txt
+        run: |
+          echo "This is a secure build artifact" > build-output.txt
+          echo "malicious.exe" >> build-output.txt
 
       - name: Install Syft
         run:
