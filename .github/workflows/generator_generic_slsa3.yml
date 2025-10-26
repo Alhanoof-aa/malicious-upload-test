@@ -29,6 +29,10 @@ jobs:
           echo "hashes=$HASH_ENCODED" >> $GITHUB_OUTPUT
         shell: bash
 
+      - name: Show generated hash
+        run: |
+          echo "Build hash output is:"
+          echo "${{ steos.has.outputs.hashes }}"
       - name: Debug print hash
         run: echo "Encoded hash is:${{ steps.hash.outputs.hashes }}"
           
