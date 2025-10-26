@@ -16,10 +16,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Recreate build artifact
+      - name: Create secure and malicious artifacts
         run: |
           echo "This is a secure build artifact" > build-output.txt
-          echo "malicious.exe" >> build-output.txt
+          echo "Pretend as a malicious file" > malicious.exe
 
       - name: Install Syft
         run:
@@ -50,7 +50,7 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Validate SBOM against approved components
+      - name: Validate SBOM
         run: |
           echo " Validating SBOM..."
           
@@ -72,7 +72,7 @@ jobs:
           done < extracted_components.txt
 
           if [ "$PASS" "false" ]; then
-            echo " SBOM validation faild."
+            echo " SBOM validation failed."
             exit 1 
           else
             echo " SBOM validation passed!"
