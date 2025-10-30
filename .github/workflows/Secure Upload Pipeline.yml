@@ -1,0 +1,100 @@
+name: Secure Upload Pipeline
+
+on:
+ push:
+   branches:
+     - main
+
+jobs:
+  generate-slsa-and-ssbom:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Simulate file upload
+        run: |
+          echo "This is a safe file" > build-output.txt
+          echo "malicious.exe pretending to be legit" > malicious.exe
+
+      - name: Simulate SLSA Provenance 
+        run: echo ' {"provenance": "trusted"}' > provenance.json
+
+      - name: Install Syft
+        run: | 
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM
+        run: syft dir:. -o spdx-json > sbom.json
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-artifacts
+          path: |
+            build-output.txt
+            malicious.exe
+            sbom.json
+            provenance.json
+
+validate-sbom:
+  needs: generate-slsa-and-sbom
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: security-artifacts
+
+
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Extract SBOM components 
+      run: |
+        jq -r '.packages[].name' sbom.json > components.txt
+
+    - name: Validate against approved list
+      run: |
+        echo "Approved components:"
+        cat approved_components.txt
+
+        echo "Checking SBOM:"
+        cat components.txt
+
+        BAD=false
+        while read component; do
+          if ! grep -qx "$component" approved_components.txt; then
+             echo "Unapproved component: $component"
+            BAD=true
+          fi
+        done < components.txt
+
+        if [ "$BAD" = "true" ]; then
+           echo "SBOM validation failed!"
+           exit 1
+        fi
+
+
+run-ml-classifier:
+  needs: validate-sbom
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:  
+         name: security-artifacts
+
+    - name: Install Python
+      run: |
+        python3 ml_model.py components.txt
