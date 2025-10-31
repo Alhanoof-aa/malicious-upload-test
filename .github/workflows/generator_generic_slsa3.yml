@@ -1,50 +1,17 @@
 name: SLSA Provenance Test
 on:
   push:
-    branches:
-      - main
+    branches: [main ]
+
 permissions:
-  contents: write
-  id-token: write
+  contents: read
   actions: read
+  id-token: write
   
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Create a build artifact
-        run: echo "This is my secure file" > build-output.txt
-
-      - name: Calculate base64-encoded SHA256 hash
-        id: hash
-        run: |
-          HASH=$(sha256sum build-output.txt | cut -d ' ' -f1)
-          HASH_ENCODED=$(echo -n "sha256:$HASH" | base64 -w0)
-          echo "hashes=$HASH_ENCODED" >> $GITHUB_OUTPUT
-          
-      - name: Debug show generated hash
-        run: echo "HASH = ${{ steps.hash.outputs.hashes }}"
-    
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: build-output.txt
-          
   generate-provenance:
-    needs: build
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main
+    uses: slsa-framework/slsa-github-generator/ .github/workflows/generator_generic_slsa3.yml@v1.9.0
     with:
-      base64-subjects: ${{ needs.build.outputs.hashes }}
-      upload-assets: true
+      artifact-path: build-output.txt
       private-repository: true
-    permissions:
-          contents: write
-          id-token: write
-          actions: read
+    secrets: inherit
