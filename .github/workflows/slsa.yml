@@ -9,9 +9,42 @@ permissions:
   id-token: write
   
 jobs:
-  generate-provenance:
-    uses: slsa-framework/slsa-github-generator/ .github/workflows/generator_generic_slsa3.yml@v1.9.0
+ prepare-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create build file
+        run: echo "Secure Build" > build-output.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build-output.txt
+
+generate-provenance:
+    needs: prepare-artifact
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
     with:
       artifact-path: build-output.txt
+      private-repository: true
+    secrets: inherit
+
+verify-output:
+    needs: generate-provenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: provenance
+
+      - name: Check files
+        run: |
+          echo "Files after SLSA step:"
+          ls -l
+  artifact-path: build-output.txt
       private-repository: true
     secrets: inherit
